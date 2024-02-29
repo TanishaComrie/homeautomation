@@ -6,16 +6,18 @@
    
 //**********ENTER IP ADDRESS OF SERVER******************//
 
-#define HOST_IP     "localhost"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
+#define HOST_IP     "172.16.193.185:3000"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
 #define HOST_PORT   "8080"            // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
 #define route       "api/update"      // LEAVE UNCHANGED 
-#define idNumber    "620012345"       // REPLACE WITH YOUR ID NUMBER 
+#define idNumber    "620156117"       // REPLACE WITH YOUR ID NUMBER 
 
 // WIFI CREDENTIALS
-#define SSID        "YOUR WIFI"      // "REPLACE WITH YOUR WIFI's SSID"   
-#define password    "YOUR PASSWORD"  // "REPLACE WITH YOUR WiFi's PASSWORD" 
+#define SSID        "MonaConnect"      // "REPLACE WITH YOUR WIFI's SSID"   
+#define password    ""  // "REPLACE WITH YOUR WiFi's PASSWORD" 
 
 #define stay        100
+#define max_height 77.763
+#define rad 30.75
  
 //**********PIN DEFINITIONS******************//
 
@@ -24,9 +26,14 @@
 #define espTX         11
 #define espTimeout_ms 300
 
+
+
  
  
 /* Declare your functions below */
+void espSend(char command[]);
+void espUpdate(char mssg[]);
+void espInit();
  
  
 
@@ -37,6 +44,7 @@ void setup(){
 
   Serial.begin(115200); 
   // Configure GPIO pins here
+  
 
  
 
@@ -45,8 +53,25 @@ void setup(){
 }
 
 void loop(){ 
+
+  double radar = sonar.ping_in()-16.737;
+  double water_height = max_height - radar;
+  double reserve = (M_PI*pow(rad,2)*height)/231.0;
+  double percentage = (water_height/max_height)*100;
    
   // send updates with schema ‘{"id": "student_id", "type": "ultrasonic", "radar": 0, "waterheight": 0, "reserve": 0, "percentage": 0}’
+  StaticJsonDocument<290> doc
+  char msg[290] = {0};
+  serial.print(radar);
+  doc["id"]= idnumber;
+  doc["type"]="ultrasonic";
+  doc["radar"] = radar;
+  doc["waterheight"] = water_height;
+  doc["reserve"] = reserve;
+  doc["percentage"] = percentage;
+  
+  serializeJson(msg,doc);
+  espUpdate(msg);
 
 
 
