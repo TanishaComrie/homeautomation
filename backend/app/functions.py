@@ -67,8 +67,69 @@ class DB:
     #    REMEMBER, THE SCHEMA FOR THE SINGLE DOCUMENT IN THE 'code' COLLECTION IS {"type":"passcode","code":"0070"}
 
 
-   
+def Add_Data(self,data):
+        try:
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result      = remotedb.ELET2415.radar.insert.one(data)
+        except Exception as e:
+            msg = str(e)
+            print("Add_data() error ",msg)            
+        else:                  
+            return result
 
+
+def get_radar(self,start, end):
+        '''RETURNS A LIST OF OBJECTS. THAT FALLS WITHIN THE START AND END DATE RANGE'''
+        try:
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result      = list (remotedb.ELET2415.radar.find({"timestamp": {"$gte","$lte"}},{"id":0}).sort("timestamp",1))
+        except Exception as e:
+            msg = str(e)
+            print("get_radar() error ",msg)            
+        else:                  
+            return result
+        
+def average(self,start, end):
+        try:
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            query= {"timestamp":{"gte":start,"$lte":end}}
+            result      = remotedb.ELET2415.radar.aggregate( [{'$match': {"timestamp": {'$gte': start, '$lte': end}}},
+                                                             {'$group': {"_id": None, "average": {"$avg": "$reserve"}}},
+                                                             {'$project': {"_id": 0, "average": 1}}])
+        except Exception as e:
+            msg = str(e)
+            print("average() error ",msg)            
+        else:                  
+            return result
+        
+def setPasscode(self,code):
+        passcode = str(code)
+        try:
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result      = remotedb.ELET2415.code.find_one_and_update({},{'$set':{code:passcode}},upsert=True, projection={'_id':False})
+        except Exception as e:
+            msg = str(e)
+            print("setPasscode() error ",msg)            
+        else:                  
+            return result
+        
+def passcodes(self,passcode):
+        '''RETURNS A LIST OF OBJECTS. THAT FALLS WITHIN THE START AND END DATE RANGE'''
+        try:
+            passcode = str(passcode)
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result      = remotedb.ELET2415.code.count_Documents({"code":passcode})
+        except Exception as e:
+            msg = str(e)
+            print("passcodes() error ",msg)            
+        else:                  
+            return result
+
+
+
+
+   
+   
 
 
 def main():
