@@ -36,11 +36,82 @@ from math import floor
 
 # 5. CREATE ROUTE FOR '/api/avg/<start>/<end>'
 
+@app.route('/api/set/combination',methods=['POST'])
+def set_passcode(code):
+    if request.method == "POST":
+        try:
+            item=mongo.setPasscode(code)
+            if item:
+                return jsonify({"status":"complete","data":"complete"})
+        except Exception as e:
+            msg=str(e)
+            print (f'set_passcode error: f{msg}')
+    return jsonify({"status":"failed","data":"failed"})
 
-   
+@app.route('/api/check/combination',methods=['POST'])
+def check_passcode():
+    '''Checks if the passcode is correct'''
+    if request.method == "POST":
+        try:
+            form = request.form
+            passcode = form.get('passcode')
+            if passcode:
+                result = mongo.passcodes(passcode)
+                if result != 0:
+                    return jsonify({"status":"success","data":"complete"})
+        except Exception as e:
+            print(f"check_passcode() error: {e}")
+        
+        return jsonify({"status":"failed","data":"failed"})
+    
+@app.route('/api/update',methods=['POST'])
+def update():
+    if request.method== "POST":
+        try:
+            jsonDoc = request.get_json()
+            timestamp= floor(datetime.now().timestamp())
+            jsonDoc['timestamp'] = timestamp
+
+            Mqtt.publish("620156117",mongo.dumps(jsonDoc))
+            Mqtt.publish("620156117_pub",mongo.dumps(jsonDoc))
+            print(f'MQTT:'(jsonDoc))
+
+            data=mongo.insertData(jsonDoc)
+            if data:
+                return jsonify({"status":"complete","data":"complete"})
+        except Exception as e:
+            msg=str(e)
+            print(f'update() error:{msg}')
+    return jsonify({"status":"failed","data":"failed"})
 
 
+@app.route('/api/reserve/<start>/<end>/<filename>',methods=['GET'])
+def get_radar(start,end):
+    if request.method =="GET":
+        try:
+            start = int(start)
+            end= int(end)
+            radar = list(mongo.get_radar(start,end))
+            if radar:
+                return jsonify({"status":"found","data": radar})
+        except Exception as e:
+            msg=str(e)
+            print(f'get_radar() error:{msg}')
+    return jsonify({"status":"failed","data": 0})
 
+@app.route('/api/avg/<start>/<end>/<filename>',methods=['GET'])
+def average(start,end):
+    if request.method == "GET":
+        try:
+            start=int(start)
+            end=int(end)
+            avg=list(mongo.average(start,end))
+            if avg:
+                return jsonify({"status":"found","data": avg} )
+        except Exception as e:
+            msg=str(e)
+            print(f'average() error:{msg}')
+    return jsonify({"status":"failed","data": 0})
 
 
 
